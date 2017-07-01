@@ -9,7 +9,7 @@ from security import Security
 class mainControll(wx.Frame):
 	"""docstring for mainControll"""
 	def __init__(self, parent,id,title):
-		super(mainControll, self).__init__(parent,title= title,size=(800,700))
+		super(mainControll, self).__init__(parent,title= title)
 		panel = wx.Panel(self,-1)
 
 		self.menuBar()
@@ -22,7 +22,7 @@ class mainControll(wx.Frame):
 		self.login.btnLogin.Bind(wx.EVT_BUTTON,self.showSalePane)
 		self.sales.Hide()
 		panel.SetSizer(box)
-		self.Centre()
+		self.Maximize(True)
 		self.Show()
 
 	def menuBar(self):

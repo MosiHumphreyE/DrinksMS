@@ -1,6 +1,6 @@
 import wx
 from databaseConn import DatabaseConn
-from security import Security
+from security import *
 # conn2DB = sqlite3.connect("drinksDB.db")
 # cur = conn2DB.cursor();
 # # cur.execute("CREATE  TABLE mainStock(indexNo INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL ,"
@@ -18,10 +18,13 @@ from security import Security
 # con.commit()
 # con.close()
 # print "we are done closing"
-
-testing = Security("masele","kimada")
-con = DatabaseConn()
-cur = con.cur()
-results = cur.execute("select name,password,status,state from security")
-ans = testing.checkpass(results)
-print ans
+# testing = Security("masele","kimada")
+# con = DatabaseConn()
+# cur = con.cur()
+# results = cur.execute("select name,password,status,state from security")
+# ans = testing.checkpass(results)
+# print ans
+#print acc.changePassword()
+#print acc.addAccount('admin')
+acc = AccountManager("mosi","kimada3")
+acc.deleteAccount()
