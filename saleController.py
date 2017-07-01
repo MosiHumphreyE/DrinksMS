@@ -40,6 +40,7 @@ class rightContent(wx.Panel):
         self.session = 0
         sessionNo = wx.StaticText(self,-1,'Session No: '+str(self.session))
         sizer4.Add(sessionNo,pos=(0,0),flag=wx.EXPAND | wx.ALL, border=5)
+
         sb2 = wx.StaticBox(self,-1,size=(500,500))
         boxsizer2 = wx.StaticBoxSizer(sb2, wx.VERTICAL)
 
