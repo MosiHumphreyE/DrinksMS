@@ -1,120 +1,247 @@
 #!/user/bin/python
 import wx
-import sys
-from wx.lib.mixins.listctrl import CheckListCtrlMixin, ListCtrlAutoWidthMixin
+from salesHandler import SalesHandler, Sales
+import datetime
 
-mylist = ['list1','list2','list3','list4','list5','list6','list7','list8','list9','list10']
 
-class CheckListCtrl(wx.ListCtrl, CheckListCtrlMixin, ListCtrlAutoWidthMixin):
-    def __init__(self, parent):
-        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER,size=(200,700))
-        CheckListCtrlMixin.__init__(self)
-        ListCtrlAutoWidthMixin.__init__(self)
+i = datetime.datetime.now()
+sale = SalesHandler()
+mylist = []
+for row in sale.lists():
+    mylist.append(row[0])
 
-class Content(wx.Frame):
+class updateStock(wx.Panel):
     def __init__(self,parent,id):
-        wx.Frame.__init__(self,parent,id,size=(800,700))
-        self.panel = wx.Panel(self)
-        self.box = wx.GridBagSizer(10,10)
-        self.menuBar()
-        txt = wx.StaticText(self.panel,-1,'Drinks Management System')
+        wx.Panel.__init__(self,parent,id)
+        self.updateStock()
 
-        stline= wx.StaticLine(self.panel)
-        self.box.Add(txt,pos=(0,1), flag=wx.EXPAND | wx.TOP, border=3)
-        self.box.Add(stline,pos=(1,0),span=(1,5),flag=wx.EXPAND | wx.BOTTOM, border=0)
+    def updateStock(self):
+        box= wx.GridBagSizer(8,1)
+        container = wx.BoxSizer(wx.VERTICAL)
 
-        self.box.Add(self.leftContent(),pos=(2,0),flag=wx.EXPAND | wx.ALL,border=5)
-        self.box.Add(self.rightContent(),pos=(2,1),flag=wx.EXPAND | wx.ALL,border=5)
-        self.panel.SetSizer(self.box,wx.EXPAND | wx.ALL)
-        self.Centre()
-        self.Show()
+        sizer1 = wx.GridBagSizer(10,3)
 
-    def rightContent(self):
-        self.sizer = wx.GridBagSizer(5,5)
-        sizer1 = wx.GridBagSizer(5,5)
-        sizer2 = wx.GridBagSizer(5,5)
-        sizer3 = wx.GridBagSizer(7,7)
-        txt1 = wx.StaticText(self.panel,-1,'Quantity')
-        textQuantity = wx.TextCtrl(self.panel)
-        qInx = wx.Button(self.panel,-1,'+')
-        qDx = wx.Button(self.panel,-1,'-')
-        quantityStatus = wx.TextCtrl(self.panel,size=(600,500),style=wx.TE_MULTILINE)
-        okButton = wx.Button(self.panel,-1,'OK')
-        btnClear = wx.Button(self.panel,-1,'Clear')
-
-        sb1 = wx.StaticBox(self.panel,-1,'Chage Session',size=(700,100))
-        boxsizer = wx.StaticBoxSizer(sb1, wx.HORIZONTAL)
-
-        sb2 = wx.StaticBox(self.panel,-1,size=(500,500))
-        boxsizer2 = wx.StaticBoxSizer(sb2, wx.VERTICAL)
-
-        text2 = wx.StaticText(self.panel,-1,'Session No: ')
-        sessionText = wx.TextCtrl(self.panel)
-        btnSession = wx.Button(self.panel,-1,'OK')
-        boxsizer.Add(text2,flag= wx.EXPAND | wx.ALL, border=5)
-        boxsizer.Add(sessionText,flag=wx.EXPAND | wx.ALL,border=5)
-        boxsizer.Add(btnSession, flag=wx.EXPAND | wx.ALL,border=5)
-
-        sizer1.Add(txt1, pos=(0,0), flag=wx.TOP | wx.LEFT | wx.RIGHT, border=5)
-        sizer1.Add(textQuantity,pos=(0,1),flag = wx.TOP | wx.RIGHT,border=5)
-        sizer1.Add(qInx,pos=(0,2),flag = wx.TOP | wx.RIGHT,border=5)
-        sizer1.Add(qDx,pos=(0,3),flag = wx.TOP | wx.RIGHT,border=5)
-        sizer2.Add(quantityStatus, pos=(0,5), flag=wx.TOP | wx.LEFT | wx.RIGHT, border=5)
-        sizer3.Add(okButton, pos=(0,6), flag=wx.TOP | wx.LEFT | wx.RIGHT, border=5)
-        sizer3.Add(btnClear, pos=(0,7), flag=wx.TOP | wx.LEFT | wx.RIGHT, border=5)
-
-        boxsizer2.Add(sizer1,flag= wx.EXPAND | wx.ALL, border=5)
-        boxsizer2.Add(sizer2,flag=wx.EXPAND | wx.ALL,border=5)
-        boxsizer2.Add(sizer3, flag=wx.EXPAND | wx.ALL,border=5)
-
-        self.sizer.Add(boxsizer2,pos=(0,0),flag= wx.TOP | wx.RIGHT, border=5)
-        self.sizer.Add(boxsizer,pos=(1,0),flag= wx.TOP | wx.RIGHT, border=5)
-
-        #self.panel.SetSizer(sizer)
-        return self.sizer
-
-
-    def leftContent(self):
-        self.container = wx.BoxSizer(wx.VERTICAL)
-        sb = wx.StaticBox(self.panel,-1,size=(550,700))
+        sb = wx.StaticBox(self,-1,'ADD NEW STOCK',size=(500,300))
         boxsizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
-        textSearch = wx.TextCtrl(self.panel,size=(250,20))
-        btnSearch = wx.Button(self.panel,-1,'Search')
-        sc = wx.GridBagSizer(1,1)
 
-        self.list = CheckListCtrl(self.panel)
-        self.list.SetSize((500,200))
-        self.list.InsertColumn(0, '', width=140)
+        name=wx.StaticText(self,-1,'Name : ')
+        self.drinkName = wx.Choice(self,1,choices= mylist,size=(240,35))
+        self.drinkName.Bind(wx.EVT_CHOICE,self.onItemSelection)
+        sizer1.Add(name,pos=(0,0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.drinkName,pos=(0,1),flag=wx.EXPAND | wx.ALL, border=2)
 
-        for i in mylist:
-            self.list.InsertStringItem(sys.maxint, i)
+        self.check = wx.CheckBox(self,1,'New Drink Name')
+        sizer1.Add(self.check,pos=(2,1),flag=wx.EXPAND | wx.LEFT, border=50)
+        self.check.Bind(wx.EVT_CHECKBOX, self.onCheck)
 
-        sc.Add(textSearch,pos=(0,0),flag=wx.EXPAND | wx.ALL,border=5)
-        sc.Add(btnSearch,pos=(0,1),flag=wx.EXPAND | wx.ALL, border=5)
-        boxsizer.Add(sc, flag=wx.EXPAND | wx.ALL)
-        boxsizer.Add(self.list, flag=wx.EXPAND | wx.ALL,border=10)
-        self.container.Add(boxsizer, wx.EXPAND | wx.ALL,border=10)
+        newName = wx.StaticText(self,1,'New Name :')
+        self.newPasswordsTextCtrl()
+        sizer1.Add(newName,pos=(3,0),flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.sizer1, pos=(3,1), flag=wx.EXPAND | wx.ALL, border=2)
 
-        return self.container
+        list=['Alcohol Drinks','Soft Drinks']
+        self.choiceDrink = wx.RadioBox(self, label= 'Drink Type',size=(250,50),choices=list)
+        sizer1.Add(self.choiceDrink,pos=(5,1),flag=wx.EXPAND | wx.LEFT, border=5)
 
-    def menuBar(self):
-        menubar = wx.MenuBar()
-        file = wx.Menu()
-        filehelp = wx.Menu()
-        fileabout = wx.Menu()
+        quantity=wx.StaticText(self,-1,'Quantity : ')
+        self.drinkQuantity = wx.TextCtrl(self,size=(250,35))
+        sizer1.Add(quantity,pos=(6,0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.drinkQuantity,pos=(6,1),flag=wx.EXPAND | wx.ALL, border=2)
 
-        new = file.Append(wx.ID_NEW, 'New', 'New Session')
-        file.AppendSeparator()
-        exit = file.Append(wx.ID_EXIT, 'Quit', 'Quit Application')
+        cost = wx.StaticText(self, -1, 'Cost/Drink : ')
+        self.costte = wx.TextCtrl(self, size=(250, 35))
+        sizer1.Add(cost, pos=(7, 0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.costte, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=2)
 
-        about = fileabout.Append(wx.ID_ABOUT, 'About', 'About Application')
-        fhelp = filehelp.Append(wx.ID_HELP, 'Help', 'Help')
-        menubar.Append(file, '&File')
-        menubar.Append(fileabout, '&About')
-        menubar.Append(filehelp, '&Help')
-        self.SetMenuBar(menubar)
+        date=wx.StaticText(self,-1,'Date : ')
+        value = '{day}/{month}/{year}'.format(day=i.day, month=i.month, year=i.year)
+        self.drinkDate = wx.TextCtrl(self,size=(250,30), value=value)
 
-if __name__=='__main__':
-    app = wx.App()
-    Content(None,-1)
-    app.MainLoop()
+        sizer1.Add(date,pos=(8,0), flag=wx.EXPAND | wx.LEFT, border=30)
+        sizer1.Add(self.drinkDate,pos=(8,1),flag=wx.EXPAND | wx.ALL, border=2)
+
+        self.updateStatus=wx.StaticText(self,-1,' ')
+        sizer1.Add(self.updateStatus,pos=(10,1), flag=wx.EXPAND | wx.ALL, border=2)
+
+        self.btnSaveDrink = wx.Button(self,1,'Save',size=(150,40))
+        self.btnSaveDrink.Bind(wx.EVT_BUTTON, self.onAddButton)
+        sizer1.Add(self.btnSaveDrink,pos=(9,2),flag=wx.EXPAND | wx.ALL, border=2)
+
+        box.Add(sizer1,pos=(0,0),flag=wx.EXPAND | wx.ALL, border=5)
+
+        boxsizer.Add(box, flag=wx.EXPAND | wx.TOP,border=50)
+        container.Add(boxsizer, wx.EXPAND | wx.TOP,border=50)
+
+        self.SetSizer(container)
+        self.checked = False
+
+    def onAddButton(self, event):
+        index = self.drinkName.GetStringSelection
+        cost = self.costte.GetValue()
+        date = self.drinkDate.GetValue()
+
+        if index != -1:
+            try:
+                float(self.drinkQuantity.GetValue())
+                self.type = ''
+                if self.choiceDrink.GetStringSelection() == 'Alcohol Drinks':
+                    self.type = 'Alcohol'
+                else:
+                    self.type = 'Soft Drinks'
+                if self.checked:
+                    try:
+                        int(self.costte.GetValue())
+                        saler = Sales(self.text_no_password1.GetValue(), self.drinkQuantity.GetValue())
+                        saler.connect.cur().execute("INSERT INTO mainStock (name,quantity,type,costperdrink,date) "
+                                                    "VALUES('{name}',{amount},'{type}',{cost},'{date}')"
+                                                    .format(name=saler.getName(), amount=saler.getAmount(),
+                                                            type=self.type
+                                                            , cost=cost, date=date))
+                        saler.connect.commit()
+                        self.updateStatus.SetLabel('Data saved')
+                        self.drinkQuantity.SetValue('')
+                        self.costte.SetValue('')
+                        self.text_no_password1.SetValue('')
+                    except ValueError:
+                        wx.MessageBox('Wrong value Cost/Drink')
+                else:
+                    name = self.drinkName.GetString(self.drinkName.GetSelection())
+                    saler = Sales(name, self.drinkQuantity.GetValue())
+                    saler.connect.cur().execute("UPDATE mainStock SET quantity = (SELECT quantity FROM mainStock WHERE name = '{name}') + {amount}, date = '{date}' WHERE name = '{name}'".format(name=saler.getName(), amount=saler.getAmount(),
+                                                                    date=date))
+                    saler.connect.commit()
+                    self.drinkQuantity.SetValue('')
+                    self.costte.SetValue('')
+                    self.updateStatus.SetLabel('Data saved')
+
+            except ValueError:
+                wx.MessageBox('Wrong value Quantity')
+
+    def onItemSelection(self, eve):
+        self.updateStatus.SetLabel('')
+
+
+    def newPasswordsTextCtrl(self):
+        self.password_shown1 = False
+        self.sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.text_password1 = wx.TextCtrl(self, style=wx.TE_READONLY, size=(240,35))
+        self.sizer1.Add(self.text_password1, 0, wx.ALL, 0)
+        self.text_no_password1 = wx.TextCtrl(self, size=(240,35))
+        self.text_no_password1.Hide()
+        self.sizer1.Add(self.text_no_password1, 0, wx.ALL, 0)
+
+
+    def onCheck(self, event):
+        self.checked = not self.checked
+        self.text_password1.Show(self.password_shown1)
+        self.text_no_password1.Show(not self.password_shown1)
+        if not self.password_shown1:
+            self.text_no_password1.SetValue(self.text_password1.GetValue())
+            self.text_no_password1.SetFocus()
+        else:
+            self.text_password1.SetValue('')
+            self.text_password1.SetFocus()
+        self.text_password1.GetParent().Layout()
+        self.password_shown1 = not self.password_shown1
+
+class editStock(wx.Panel):
+    def __init__(self,parent,id):
+        wx.Panel.__init__(self, parent,id)
+
+        self.editStock()
+
+    def editStock(self):
+        box= wx.wx.GridBagSizer(8,1)
+        container = wx.BoxSizer(wx.VERTICAL)
+
+        sizer1 = wx.GridBagSizer(4,4)
+
+        sb = wx.StaticBox(self, -1, 'EDIT STOCK',size=(500,900))
+        boxsizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
+
+        name=wx.StaticText(self,-1,'Name : ')
+        self.drinkNameEdit = wx.Choice(self,1,choices=mylist,size=(240,30))
+        self.drinkNameEdit.Bind(wx.EVT_CHOICE, self.onItemSelection)
+        sizer1.Add(name,pos=(0,0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.drinkNameEdit,pos=(0,1),flag=wx.EXPAND | wx.ALL, border=5)
+
+        quantity=wx.StaticText(self,-1,'Quantity : ')
+        self.drinkQuantityEdit = wx.TextCtrl(self,size=(250,30))
+        sizer1.Add(quantity,pos=(1,0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.drinkQuantityEdit,pos=(1,1),flag=wx.EXPAND | wx.ALL, border=5)
+
+        cost = wx.StaticText(self, -1, 'Cost/Drink : ')
+        self.costText = wx.TextCtrl(self, size=(250, 30))
+        sizer1.Add(cost, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.costText, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
+        self.editStatus=wx.StaticText(self,-1,' ')
+        sizer1.Add(self.editStatus,pos=(3,1), flag=wx.EXPAND | wx.ALL, border=2)
+
+        self.btnEditDrink = wx.Button(self,1,'Save',size=(150,40))
+        sizer1.Add(self.btnEditDrink,pos=(4,2),flag=wx.EXPAND | wx.ALL, border=2)
+        self.Bind(wx.EVT_BUTTON, self.onSelectSave)
+
+        box.Add(sizer1,pos=(0,0),flag=wx.EXPAND | wx.ALL, border=5)
+
+        boxsizer.Add(box, flag=wx.EXPAND | wx.LEFT,border=5)
+        container.Add(boxsizer, wx.EXPAND | wx.TOP,border=50)
+
+        self.SetSizer(container)
+
+    def onItemSelection(self, eve):
+        self.editStatus.SetLabel('')
+
+    def saveChanges(self, label):
+        self.editStatus.SetLabel(label)
+        self.drinkQuantityEdit.SetValue('')
+        self.costText.SetValue('')
+
+    def onSelectSave(self, event):
+        name = self.drinkNameEdit.GetString(self.drinkNameEdit.GetSelection())
+        amount = self.drinkQuantityEdit.GetValue()
+        cost = self.costText.GetValue()
+        try:
+            if amount:
+                if cost:
+                    float(amount)
+                    int(cost)
+                    sale.connect.cur().execute(
+                        "UPDATE mainStock SET quantity = {amount}, costperdrink = {cost} WHERE name ='{name}'"
+                        .format(name=name, amount=amount, cost=cost))
+                    sale.connect.commit()
+                    self.saveChanges('Quantity & Cost/Drink Edited')
+                else:
+                    float(amount)
+                    sale.connect.cur().execute("UPDATE mainStock SET quantity = {amount} WHERE name ='{name}'"
+                                               .format(name=name, amount=amount, ))
+                    sale.connect.commit()
+                    self.saveChanges('Quantity Edited')
+
+            elif cost:
+                int(cost)
+                sale.connect.cur().execute("UPDATE mainStock SET costperdrink = {cost} WHERE name ='{name}'"
+                    .format(name=name, cost=cost, ))
+                sale.connect.commit()
+                self.saveChanges('Cost Edited')
+            else:
+                wx.MessageBox('Drink Quantity OR Cost/Drink not filled', 'Info')
+        except ValueError:
+            wx.MessageBox('Enter the correct amount OR Cost/Drink', 'Info')
+
+
+    def onChoice(self, event):
+        self.drinkQuantityEdit.SetValue('')
+
+
+class Content1(wx.Panel):
+    def __init__(self, parent, id):
+        wx.Panel.__init__(self, parent,id)
+        box= wx.GridBagSizer(3,1)
+
+        self.editStock = editStock(self,-1)
+        self.updateStock = updateStock(self,-1)
+        box.Add(self.updateStock,pos=(0,0),flag=wx.EXPAND | wx.LEFT | wx.TOP,border=20)
+        box.Add(self.editStock,pos=(0,2),flag=wx.EXPAND | wx.LEFT | wx.TOP,border=20)
+        self.SetSizer(box)
+        self.Show()

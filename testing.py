@@ -1,7 +1,7 @@
-from salesHandler import SalesHandler
+trying = 'frfg'
 
-sale = SalesHandler()
-i = 0
-for row in sale.lists():
-    print row[i]
-    ++i
+try:
+    int(trying)
+    print 'yes'
+except ValueError:
+    print 'no'
