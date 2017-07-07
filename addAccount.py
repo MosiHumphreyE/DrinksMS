@@ -22,6 +22,8 @@ class AddAccount(wx.Panel):
         self.status = wx.StaticText(self, 1, '')
         self.status1 = wx.StaticText(self, 1, '')
         self.status2 = wx.StaticText(self, 1, '')
+        self.text_password1.Bind(wx.EVT_KEY_UP, self.keyReleased3)
+        self.text_no_password1.Bind(wx.EVT_KEY_UP, self.keyReleased1)
         self.Save = wx.Button(self, 1, 'SAVE CHANGES')
         self.Save.SetBackgroundColour('green')
         self.Save.Bind(wx.EVT_BUTTON,self.saveButtonHandeler)

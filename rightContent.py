@@ -97,6 +97,9 @@ class updateStock(wx.Panel):
                                                     .format(name=saler.getName(), amount=saler.getAmount(),
                                                             type=self.type
                                                             , cost=cost, date=date))
+                        saler.connect.cur().execute("INSERT INTO dailySale (name,quantity,type,cost) VALUES('{name}',0,'{type}',0)"
+                                                    .format(name=saler.getName(),type=self.type))
+
                         saler.connect.commit()
                         self.updateStatus.SetLabel('Data saved')
                         self.drinkQuantity.SetValue('')

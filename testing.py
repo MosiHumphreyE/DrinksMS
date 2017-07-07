@@ -1,7 +1,3 @@
-trying = 'frfg'
-
-try:
-    int(trying)
-    print 'yes'
-except ValueError:
-    print 'no'
+lst1 = [1, 2, 3]
+lst1[:] = []
+print (lst1)

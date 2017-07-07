@@ -3,8 +3,7 @@ import wx
 from saleController import Content
 from  rightContent import Content1
 from changePassword import ChangePassword
-from addAccount import AddAccount
-from deleteAccount import DeleteAccount
+from reportView import report
 
 class windowAdmin(wx.Frame):
     def __init__(self, parent):
@@ -18,12 +17,12 @@ class windowAdmin(wx.Frame):
         self.content = Content(nb,-1)
         self.content1 = Content1(nb,-1)
         self.pswChange = ChangePassword(nb,-1)
+        self.report = report(nb,-1)
 
         nb.AddPage(self.content1, "Stock Update")
         nb.AddPage(self.content, "Sales Management")
         nb.AddPage(self.pswChange, "Account management")
-
-
+        nb.AddPage(self.report, "View Report")
 
         self.Maximize(True)
         self.Centre()
@@ -35,9 +34,8 @@ class windowAdmin(wx.Frame):
         filehelp = wx.Menu()
         fileabout = wx.Menu()
 
-        new = file.Append(wx.ID_NEW, 'New', 'New Session')
         file.AppendSeparator()
-        exit = file.Append(wx.ID_EXIT, 'Quit', 'Quit Application')
+        self.exit = file.Append(wx.ID_EXIT, 'Quit', 'Quit Application')
 
         about = fileabout.Append(wx.ID_ABOUT, 'About', 'About Application')
         fhelp = filehelp.Append(wx.ID_HELP, 'Help', 'Help')

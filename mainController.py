@@ -1,10 +1,9 @@
 #!/user/bin/python
 import wx
 from loginController import LogIn
-from  saleController import Content,rightContent
+from  saleController import Content
 from databaseConn import DatabaseConn
 from security import Security
-from  rightContent import Content1
 from adminWindow import windowAdmin
 
 class mainControll(wx.Frame):
@@ -19,16 +18,39 @@ class mainControll(wx.Frame):
 		box = wx.BoxSizer()
 		box.Add(self.login,1, wx.EXPAND | wx.ALL, 5)
 		box.Add(self.sales,1,wx.EXPAND | wx.ALL,5)
+		box.Add(self.window,1,wx.EXPAND | wx.ALL,5)
 		self.login.btnLogin.Bind(wx.EVT_BUTTON,self.showSalePane)
+		self.login.passText.Bind(wx.EVT_KEY_DOWN ,self.enterkey)
+		self.login.passNoText.Bind(wx.EVT_KEY_DOWN, self.enterkey)
+		self.window.Bind(wx.EVT_CLOSE,self.closeAll)
 		self.sales.Hide()
+		self.window.Hide()
+		self.window.Bind(wx.EVT_MENU,self.OnClose)
 		panel.SetSizer(box)
 		self.Maximize(True)
 		self.Show()
 
-	def OnClose(self,e):
-		self.Close()
+	def enterkey(self, event):
+		keycode = event.GetKeyCode()
+		if keycode == wx.WXK_RETURN or keycode == wx.WXK_NUMPAD_ENTER:
+			self.showSalePane(event=None)
+			event.EventObject.Navigate()
+		event.Skip()
 
-	def showSalePane(self,e):
+	def OnClose(self,e):
+		id = e.GetId()
+		if id == wx.ID_EXIT:
+			self.window.Close()
+			self.Close()
+
+	def closeAll(self,e):
+		id = e.GetId()
+		if id == wx.ID_CANCEL:
+			print"heloo"
+			self.Close()
+			self.window.Close()
+
+	def showSalePane(self,event):
 		user = Security(self.login.nameText.GetValue(),self.login.passText.GetValue())
 		connect = DatabaseConn()
 		data = connect.cur().execute("select name,password,status from security")
