@@ -39,33 +39,34 @@ class updateStock(wx.Panel):
         sizer1.Add(newName,pos=(3,0),flag=wx.EXPAND | wx.ALL, border=2)
         sizer1.Add(self.sizer1, pos=(3,1), flag=wx.EXPAND | wx.ALL, border=2)
 
-        list=['Alcohol Drinks','Soft Drinks']
-        self.choiceDrink = wx.RadioBox(self, label= 'Drink Type',size=(250,50),choices=list)
-        sizer1.Add(self.choiceDrink,pos=(5,1),flag=wx.EXPAND | wx.LEFT, border=5)
+        bunch = wx.StaticText(self, 1, 'Quantity :')
+        self.quantity = wx.TextCtrl(self, size=(250, 35))
+        sizer1.Add(bunch,pos=(4,0),flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.quantity, pos=(4, 1), flag=wx.EXPAND | wx.ALL, border=2)
 
-        quantity=wx.StaticText(self,-1,'Quantity : ')
-        self.drinkQuantity = wx.TextCtrl(self,size=(250,35))
-        sizer1.Add(quantity,pos=(6,0), flag=wx.EXPAND | wx.ALL, border=2)
-        sizer1.Add(self.drinkQuantity,pos=(6,1),flag=wx.EXPAND | wx.ALL, border=2)
+        quantity=wx.StaticText(self,-1,'Purchases : ')
+        self.purchase = wx.TextCtrl(self,size=(250,35))
+        sizer1.Add(quantity,pos=(5,0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.purchase,pos=(5,1),flag=wx.EXPAND | wx.ALL, border=2)
 
-        cost = wx.StaticText(self, -1, 'Cost/Drink : ')
-        self.costte = wx.TextCtrl(self, size=(250, 35))
-        sizer1.Add(cost, pos=(7, 0), flag=wx.EXPAND | wx.ALL, border=2)
-        sizer1.Add(self.costte, pos=(7, 1), flag=wx.EXPAND | wx.ALL, border=2)
+        cost = wx.StaticText(self, -1, 'Sales : ')
+        self.sale = wx.TextCtrl(self, size=(250, 35))
+        sizer1.Add(cost, pos=(6, 0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.sale, pos=(6, 1), flag=wx.EXPAND | wx.ALL, border=2)
 
         date=wx.StaticText(self,-1,'Date : ')
         value = '{day}/{month}/{year}'.format(day=i.day, month=i.month, year=i.year)
         self.drinkDate = wx.TextCtrl(self,size=(250,30), value=value)
 
-        sizer1.Add(date,pos=(8,0), flag=wx.EXPAND | wx.LEFT, border=30)
-        sizer1.Add(self.drinkDate,pos=(8,1),flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(date,pos=(7,0), flag=wx.EXPAND | wx.LEFT, border=30)
+        sizer1.Add(self.drinkDate,pos=(7,1),flag=wx.EXPAND | wx.ALL, border=2)
 
         self.updateStatus=wx.StaticText(self,-1,' ')
         sizer1.Add(self.updateStatus,pos=(10,1), flag=wx.EXPAND | wx.ALL, border=2)
 
         self.btnSaveDrink = wx.Button(self,1,'Save',size=(150,40))
         self.btnSaveDrink.Bind(wx.EVT_BUTTON, self.onAddButton)
-        sizer1.Add(self.btnSaveDrink,pos=(9,2),flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.btnSaveDrink,pos=(8,2),flag=wx.EXPAND | wx.ALL, border=2)
 
         box.Add(sizer1,pos=(0,0),flag=wx.EXPAND | wx.ALL, border=5)
 
@@ -75,53 +76,52 @@ class updateStock(wx.Panel):
         self.SetSizer(container)
         self.checked = False
 
-    def onAddButton(self, event):
+    def onAddButton(self):
         index = self.drinkName.GetStringSelection
-        cost = self.costte.GetValue()
+        quantity = self.quantity.GetValue()
+        purchase = self.purchase.GetValue()
         date = self.drinkDate.GetValue()
+        sale = self.sale.GetValue()
 
         if index != -1:
             try:
-                float(self.drinkQuantity.GetValue())
-                self.type = ''
-                if self.choiceDrink.GetStringSelection() == 'Alcohol Drinks':
-                    self.type = 'Alcohol'
-                else:
-                    self.type = 'Soft Drinks'
+                int(quantity)
+                int(purchase)
+                int(sale)
                 if self.checked:
-                    try:
-                        int(self.costte.GetValue())
-                        saler = Sales(self.text_no_password1.GetValue(), self.drinkQuantity.GetValue())
-                        saler.connect.cur().execute("INSERT INTO mainStock (name,quantity,type,costperdrink,date) "
-                                                    "VALUES('{name}',{amount},'{type}',{cost},'{date}')"
+                        saler = Sales(self.text_no_password1.GetValue(), quantity )
+                        saler.connect.cur().execute("INSERT INTO mainStock (name,quantity,saleCost,purCost,date) "
+                                                    "VALUES('{name}',{amount},{saleCost},{purCost},'{date}')"
                                                     .format(name=saler.getName(), amount=saler.getAmount(),
-                                                            type=self.type
-                                                            , cost=cost, date=date))
-                        saler.connect.cur().execute("INSERT INTO dailySale (name,quantity,type,cost) VALUES('{name}',0,'{type}',0)"
-                                                    .format(name=saler.getName(),type=self.type))
-
+                                                            saleCost=sale, purCost=purchase, date=date))
+                        saler.connect.cur().execute("INSERT INTO dailySale (name, quantity, sales, profit, date) VALUES('{name}',0,0,0,'{date}')"
+                                                    .format(name=saler.getName(), date= date))
                         saler.connect.commit()
                         self.updateStatus.SetLabel('Data saved')
-                        self.drinkQuantity.SetValue('')
-                        self.costte.SetValue('')
+                        self.quantity.SetValue('')
+                        self.purchase.SetValue('')
+                        self.drinkDate.SetValue('')
+                        self.sale.SetValue('')
                         self.text_no_password1.SetValue('')
-                    except ValueError:
-                        wx.MessageBox('Wrong value Cost/Drink')
+                        self.updateStatus.SetLabel('Data saved')
                 else:
                     name = self.drinkName.GetString(self.drinkName.GetSelection())
-                    saler = Sales(name, self.drinkQuantity.GetValue())
-                    saler.connect.cur().execute("UPDATE mainStock SET quantity = (SELECT quantity FROM mainStock WHERE name = '{name}') + {amount}, date = '{date}' WHERE name = '{name}'".format(name=saler.getName(), amount=saler.getAmount(),
-                                                                    date=date))
+                    saler = Sales(name, quantity)
+                    saler.connect.cur().execute("UPDATE mainStock SET quantity = (SELECT quantity FROM mainStock WHERE name = '{name}') +"
+                                                " {amount}, date = '{date}' , saleCost = '{sales}', purCost ='{purCost}'  WHERE name = '{name}'"
+                                                .format(name=saler.getName(), amount=saler.getAmount(),date=date, purCost = purchase, sales =sale))
                     saler.connect.commit()
-                    self.drinkQuantity.SetValue('')
-                    self.costte.SetValue('')
+                    self.quantity.SetValue('')
+                    self.purchase.SetValue('')
+                    self.drinkDate.SetValue('')
+                    self.sale.SetValue('')
                     self.updateStatus.SetLabel('Data saved')
-
             except ValueError:
-                wx.MessageBox('Wrong value Quantity')
+                wx.MessageBox('Wrong value on Quantity')
 
     def onItemSelection(self, eve):
         self.updateStatus.SetLabel('')
+
 
 
     def newPasswordsTextCtrl(self):
@@ -153,17 +153,24 @@ class editStock(wx.Panel):
 
         self.editStock()
 
+    def populate(self):
+        mylist = []
+        for row in sale.lists():
+            mylist.append(row[0])
+        self.drinkNameEdit.SetItems(mylist)
+
     def editStock(self):
         box= wx.wx.GridBagSizer(8,1)
         container = wx.BoxSizer(wx.VERTICAL)
 
-        sizer1 = wx.GridBagSizer(4,4)
+        sizer1 = wx.GridBagSizer(5,4)
 
         sb = wx.StaticBox(self, -1, 'EDIT STOCK',size=(500,900))
         boxsizer = wx.StaticBoxSizer(sb, wx.VERTICAL)
 
         name=wx.StaticText(self,-1,'Name : ')
-        self.drinkNameEdit = wx.Choice(self,1,choices=mylist,size=(240,30))
+        self.drinkNameEdit = wx.Choice(self,1,size=(240,30))
+        self.populate()
         self.drinkNameEdit.Bind(wx.EVT_CHOICE, self.onItemSelection)
         sizer1.Add(name,pos=(0,0), flag=wx.EXPAND | wx.ALL, border=2)
         sizer1.Add(self.drinkNameEdit,pos=(0,1),flag=wx.EXPAND | wx.ALL, border=5)
@@ -173,16 +180,21 @@ class editStock(wx.Panel):
         sizer1.Add(quantity,pos=(1,0), flag=wx.EXPAND | wx.ALL, border=2)
         sizer1.Add(self.drinkQuantityEdit,pos=(1,1),flag=wx.EXPAND | wx.ALL, border=5)
 
-        cost = wx.StaticText(self, -1, 'Cost/Drink : ')
+        cost = wx.StaticText(self, -1, 'Purchase : ')
         self.costText = wx.TextCtrl(self, size=(250, 30))
         sizer1.Add(cost, pos=(2, 0), flag=wx.EXPAND | wx.ALL, border=2)
         sizer1.Add(self.costText, pos=(2, 1), flag=wx.EXPAND | wx.ALL, border=5)
 
+        salestatic = wx.StaticText(self, -1, 'Sales : ')
+        self.salesText = wx.TextCtrl(self, size=(250, 30))
+        sizer1.Add(salestatic, pos=(3, 0), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.salesText, pos=(3, 1), flag=wx.EXPAND | wx.ALL, border=5)
+
         self.editStatus=wx.StaticText(self,-1,' ')
-        sizer1.Add(self.editStatus,pos=(3,1), flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.editStatus,pos=(4,1), flag=wx.EXPAND | wx.ALL, border=2)
 
         self.btnEditDrink = wx.Button(self,1,'Save',size=(150,40))
-        sizer1.Add(self.btnEditDrink,pos=(4,2),flag=wx.EXPAND | wx.ALL, border=2)
+        sizer1.Add(self.btnEditDrink,pos=(5,2),flag=wx.EXPAND | wx.ALL, border=2)
         self.Bind(wx.EVT_BUTTON, self.onSelectSave)
 
         box.Add(sizer1,pos=(0,0),flag=wx.EXPAND | wx.ALL, border=5)
@@ -199,38 +211,79 @@ class editStock(wx.Panel):
         self.editStatus.SetLabel(label)
         self.drinkQuantityEdit.SetValue('')
         self.costText.SetValue('')
+        self.salesText.SetValue('')
 
     def onSelectSave(self, event):
-        name = self.drinkNameEdit.GetString(self.drinkNameEdit.GetSelection())
-        amount = self.drinkQuantityEdit.GetValue()
-        cost = self.costText.GetValue()
-        try:
-            if amount:
-                if cost:
-                    float(amount)
+        index = self.drinkNameEdit.GetSelection()
+        if index != -1:
+            name = self.drinkNameEdit.GetString(index)
+            amount = self.drinkQuantityEdit.GetValue()
+            cost = self.costText.GetValue()
+            salingCost = self.salesText.GetValue()
+            try:
+                if amount:
+                    int(amount)
+                    if cost:
+                        int(cost)
+                        if salingCost:
+                            # salingcost, purchaseCost and amount updated
+                            int(salingCost)
+                            sale.connect.cur().execute(
+                                "UPDATE mainStock SET quantity = {amount}, saleCost = {salingCost}, purCost = {cost} WHERE name ='{name}'"
+                                    .format(name=name, amount=amount, cost=cost, salingCost=salingCost))
+                            sale.connect.commit()
+                            self.saveChanges('Data Saved')
+                        else:
+                            # Quantity and purchase cost updates
+                            sale.connect.cur().execute("UPDATE mainStock SET quantity = {amount}, purCost = {cost} WHERE name ='{name}'"
+                                                   .format(name=name, amount=amount, cost=cost ))
+                            sale.connect.commit()
+                            self.saveChanges('Quantity and Purchase cost Edited')
+                    elif salingCost:
+                        # quantity and sailing cost updated
+                        int(salingCost)
+                        sale.connect.cur().execute(
+                            "UPDATE mainStock SET quantity = {amount}, saleCost = {salingCost} WHERE name ='{name}'"
+                                .format(name=name, amount=amount, salingCost=salingCost))
+                        sale.connect.commit()
+                        self.saveChanges('Quantity and Sales cost Edited')
+                    else:
+                        # Quantity only edited
+                        sale.connect.cur().execute(
+                            "UPDATE mainStock SET quantity = {amount} WHERE name ='{name}'"
+                            .format(name=name, amount=amount))
+                        sale.connect.commit()
+                        self.saveChanges('Quantity Edited')
+                elif cost:
                     int(cost)
+                    if salingCost:
+                        # Saling cost and purchase cost update
+                        int(cost)
+                        sale.connect.cur().execute("UPDATE mainStock SET saleCost = {salingCost}, purCost = {cost} WHERE name ='{name}'"
+                                               .format(name=name, cost=cost, salingCost=salingCost ))
+                        sale.connect.commit()
+                        self.saveChanges('Sales prices and purchases price edited')
+                    else:
+                        # purchase cost only update
+                        sale.connect.cur().execute(
+                            "UPDATE mainStock SET purCost = {cost} WHERE name ='{name}'"
+                            .format(name=name, cost=cost))
+                        sale.connect.commit()
+                        self.saveChanges('Cost Edited')
+                elif salingCost:
+                    int(salingCost)
+                    # sales cost only update
                     sale.connect.cur().execute(
-                        "UPDATE mainStock SET quantity = {amount}, costperdrink = {cost} WHERE name ='{name}'"
-                        .format(name=name, amount=amount, cost=cost))
+                        "UPDATE mainStock SET saleCost = {salingCost} WHERE name ='{name}'"
+                            .format(name=name, salingCost=salingCost))
                     sale.connect.commit()
-                    self.saveChanges('Quantity & Cost/Drink Edited')
+                    self.saveChanges('Sales Cost changed')
                 else:
-                    float(amount)
-                    sale.connect.cur().execute("UPDATE mainStock SET quantity = {amount} WHERE name ='{name}'"
-                                               .format(name=name, amount=amount, ))
-                    sale.connect.commit()
-                    self.saveChanges('Quantity Edited')
-
-            elif cost:
-                int(cost)
-                sale.connect.cur().execute("UPDATE mainStock SET costperdrink = {cost} WHERE name ='{name}'"
-                    .format(name=name, cost=cost, ))
-                sale.connect.commit()
-                self.saveChanges('Cost Edited')
-            else:
-                wx.MessageBox('Drink Quantity OR Cost/Drink not filled', 'Info')
-        except ValueError:
-            wx.MessageBox('Enter the correct amount OR Cost/Drink', 'Info')
+                    # no information filled at all
+                    wx.MessageBox("Fill in correct information")
+            except ValueError:
+                wx.MessageBox('Enter the correct data please', 'Info')
+        else: wx.MessageBox('Please choose a drink name', 'Error')
 
 
     def onChoice(self, event):
@@ -244,7 +297,12 @@ class Content1(wx.Panel):
 
         self.editStock = editStock(self,-1)
         self.updateStock = updateStock(self,-1)
+        self.updateStock.btnSaveDrink.Bind(wx.EVT_BUTTON, self.onAddButton)
         box.Add(self.updateStock,pos=(0,0),flag=wx.EXPAND | wx.LEFT | wx.TOP,border=20)
         box.Add(self.editStock,pos=(0,2),flag=wx.EXPAND | wx.LEFT | wx.TOP,border=20)
         self.SetSizer(box)
         self.Show()
+
+    def onAddButton(self,event):
+        self.updateStock.onAddButton()
+        self.editStock.populate()

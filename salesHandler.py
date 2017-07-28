@@ -11,7 +11,7 @@ class SalesHandler:
 
 
     def lists(self):
-        values = self.connect.cur().execute("select name from mainStock")
+        values = self.connect.cur().execute("select name from mainStock where quantity  > 0")
         list = []
         for row in values:
             list.append(row)
@@ -24,25 +24,18 @@ class Sales:
         self.name = name
         self.amount = amount
         self.connect = DatabaseConn()
-        self.cost = self.getCostPerDrint()
-
-    def getCostPerDrint(self):
-        data = self.connect.cur().execute("SELECT costperdrink FROM mainStock WHERE name = '{name}'".
-                                          format(name=self.name))
-        cost = ''
-        for row in data:
-            cost = row[0]
-
-        return cost
 
     def getName(self):
         return self.name
 
+    def getCost(self):
+        results = self.connect.cur().execute("SELECT  saleCost FROM mainStock WHERE name = '{name}'".format(name=self.name))
+        for row in results:
+            cost =int(row[0])
+        return cost
+
     def getAmount(self):
         return self.amount
 
-    def getCost(self):
-        return self.cost
-
     def getTotalCost(self):
-        return str(int(self.cost)*int(self.amount))
+        return str(int(self.getCost())*int(self.amount))

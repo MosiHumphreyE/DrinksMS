@@ -1,3 +1,4 @@
-lst1 = [1, 2, 3]
-lst1[:] = []
-print (lst1)
+# from databaseConn import DatabaseConn
+# connect = DatabaseConn()
+# results = connect.cur().execute("SELECT  purCost,quantity FROM mainStock WHERE name = '{name}'".format(name='cocacola'))
+# print results.next()[1]

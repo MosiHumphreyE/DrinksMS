@@ -1,180 +1,239 @@
-import sys
 import wx
-dailySaleData = [('Tendulkar', '15000', '100'), ('Dravid', '14000', '1'),
-('Kumble', '1000', '700'), ('KapilDev', '5000', '400'),
-('Ganguly', '8000', '50')]
+import sys
+from wx.lib.mixins.listctrl import CheckListCtrlMixin, ListCtrlAutoWidthMixin
+from salesHandler import SalesHandler
+from salesHandler import Sales
+import datetime
+from databaseConn import DatabaseConn
+connection = DatabaseConn()
 
-mainSaleData = [('Tendulkar', '15000', '100'), ('Dravid', '14000', '1'),
-('Kumble', '1000', '700'), ('KapilDev', '5000', '400'),
-('Ganguly', '8000', '50')]
+sale = SalesHandler()
+mylist = []
+for row in sale.lists():
+    mylist.append(row[0])
+date = datetime.datetime.now()
+vdate = '{day}/{month}/{year}'.format(day=date.day, month=date.month, year=date.year)
+from saleController import leftContent,rightContent
 
-mainStockData = [('Tendulkar', '15000', '100'), ('Dravid', '14000', '1'),
-('Kumble', '1000', '700'), ('KapilDev', '5000', '400'),
-('Ganguly', '8000', '50')]
 
-class dailySaleReport(wx.Panel):
-	def __init__(self,parent,id):
-		wx.Panel.__init__(self,parent,id)
-		sizer = wx.GridBagSizer(2,0)
-		self.hbUp = wx.BoxSizer(wx.HORIZONTAL)
-		sb = wx.StaticBox(self,-1,'DAILY SALES REPORT')
-		box = wx.StaticBoxSizer(sb,wx.HORIZONTAL)
-
-		self.choice = ['Daily Sales Report','Main Sales Report','Main Stock Report']
-		self.choiceBox = wx.Choice(self,1,choices=self.choice,style = wx.CB_READONLY,size=(150,35))
-		self.hbUp.Add(self.choiceBox, wx.EXPAND, border = 5)
-		self.btnShow = wx.Button(self,1,'Show',size=(150,35))
-		self.hbUp.Add(self.btnShow, wx.EXPAND,border = 5)
-		st1= wx.StaticText(self,1,'')
-		self.hbUp.Add(st1, wx.EXPAND,border = 5)
-
-		self.dailySale = wx.ListCtrl(self, -1, style=wx.LC_REPORT)
-		self.dailySale.InsertColumn(0, 'Name', width=200)
-		self.dailySale.InsertColumn(1, 'Quantity', wx.LIST_FORMAT_RIGHT, 200)
-		self.dailySale.InsertColumn(2, 'Type', wx.LIST_FORMAT_RIGHT, 200)
-		self.dailySale.InsertColumn(3, 'Cost', wx.LIST_FORMAT_RIGHT, 200)
-
-		for i in dailySaleData:
-		 	index = self.dailySale.InsertStringItem(sys.maxint, i[0])
-		 	self.dailySale.SetStringItem(index, 1, i[1])
-			self.dailySale.SetStringItem(index, 2, i[2])
-		box.Add(self.dailySale,flag=wx.EXPAND | wx.ALL,border=5)
-
-		sizer.Add(self.hbUp,pos=(0,0),flag=wx.EXPAND | wx.ALL,border=5)
-		sizer.Add(box,pos=(2,0),flag=wx.EXPAND | wx.ALL,border=5)
-		self.SetSizer(sizer)
+class salew(wx.Panel):
+	def __init__(self, parent,id):
+		super(salew, self).__init__(parent, id)
+		self.InUI()
 		self.Fit()
-		self.Show(True)
+		self.Show()
 
-class mainSaleReport(wx.Panel):
-	def __init__(self,parent,id):
-		wx.Panel.__init__(self,parent,id)
-		sizer = wx.GridBagSizer(2,0)
-		self.hbUp = wx.BoxSizer(wx.HORIZONTAL)
-		sb = wx.StaticBox(self,-1,'MAIN SALES REPORT')
-		box = wx.StaticBoxSizer(sb,wx.HORIZONTAL)
+	def InUI(self):
+		self.index = -1
+		box = wx.GridBagSizer(2,2)
+		txt = wx.StaticText(self, -1, 'Drinks Management System')
 
-		self.choice = ['Daily Sales Report','Main Sales Report','Main Stock Report']
-		self.choiceBox = wx.Choice(self,1,choices=self.choice,style = wx.CB_READONLY,size=(150,35))
-		self.hbUp.Add(self.choiceBox, wx.EXPAND, border = 5)
-		self.btnShow = wx.Button(self,1,'Show',size=(150,35))
-		self.hbUp.Add(self.btnShow, wx.EXPAND,border = 5)
-		st1= wx.StaticText(self,1,'')
-		self.hbUp.Add(st1, wx.EXPAND,border = 5)
-		st2= wx.StaticText(self,1,'')
-		self.hbUp.Add(st2, wx.EXPAND,border = 5)
+		stline = wx.StaticLine(self)
+		box.Add(txt, pos=(0, 1), flag=wx.EXPAND | wx.TOP, border=3)
+		box.Add(stline, pos=(1, 0), span=(1, 5), flag=wx.EXPAND | wx.BOTTOM, border=0)
 
-		self.mainSale = wx.ListCtrl(self,-1,style=wx.LC_REPORT)
-		self.mainSale.InsertColumn(0, 'Name', width=200)
-		self.mainSale.InsertColumn(1, 'Quantity', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainSale.InsertColumn(2, 'Type', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainSale.InsertColumn(3, 'Cost', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainSale.InsertColumn(4, 'Date', wx.LIST_FORMAT_RIGHT, 200)
+		self.left = leftContent(self,-1)
+		self.right = rightContent(self,-1)
+		self.left.list.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnSelectItem)
+		self.right.qInx.Bind(wx.EVT_BUTTON, self.AddButton)
+		self.right.qDx.Bind(wx.EVT_BUTTON, self.SubButton)
+		self.right.btnClear.Bind(wx.EVT_BUTTON, self.OnSeleClear)
+		self.right.btnOksession.Bind(wx.EVT_BUTTON, self.OnSeleOkButton)
+		self.right.okButton.Bind(wx.EVT_BUTTON, self.onSaveSession)
+		self.right.btnSession.Bind(wx.EVT_BUTTON, self.editSession)
+		self.right.sessionText.Bind(wx.EVT_KEY_UP, self.enterkey)
+		self.right.btnSession.Bind(wx.EVT_KEY_UP, self.enterkey)
+		self.right.quantityStatus.Bind(wx.EVT_LIST_ITEM_SELECTED,self.onclear)
+		box.Add(self.left,pos=(2,0),flag=wx.EXPAND |
+			wx.ALL,border=5)
+		box.Add(self.right,pos=(2,2),flag=wx.EXPAND |
+			wx.ALL,border=5)
+		self.SetSizer(box)
+		self.session = 1
+		self.notInSession = True
+		self.lastSession = 0
+		self.quantOrdertot=0
+		self.costOrdertot = 0
 
-		for i in mainSaleData:
-		 	index = self.mainSale.InsertStringItem(sys.maxint, i[0])
-		 	self.mainSale.SetStringItem(index, 1, i[1])
-		 	self.mainSale.SetStringItem(index, 2, i[2])
-		box.Add(self.mainSale,flag=wx.EXPAND | wx.ALL,border=5)
+	def enterkey(self, event):
+		keycode = event.GetKeyCode()
+		if keycode == wx.WXK_RETURN or keycode == wx.WXK_NUMPAD_ENTER:
+			self.editSession(event=None)
+			event.EventObject.Navigate()
+		event.Skip()
 
-		sizer.Add(self.hbUp,pos=(0,0),flag=wx.EXPAND | wx.ALL,border=5)
-		sizer.Add(box,pos=(2,0),flag=wx.EXPAND | wx.ALL,border=5)
-		self.SetSizer(sizer)
-		self.Fit()
-		self.Show(True)
+	def OnSelectItem(self, event):
+		self.right.setZero()
 
-class mainStockReport(wx.Panel):
-	def __init__(self, parent, id):
-		wx.Panel.__init__(self, parent, id)
-		sizer = wx.GridBagSizer(2, 0)
-		self.hbUp = wx.BoxSizer(wx.HORIZONTAL)
-		sb = wx.StaticBox(self,-1,'MAIN STOCK REPORT')
-		box = wx.StaticBoxSizer(sb,wx.HORIZONTAL)
+	def AddButton(self, event):
+		value = self.right.textQuantity.GetValue()
+		if value:
+			newValue = int(value)
+			if newValue >= 0:
+				newValue += 1
+				self.right.textQuantity.SetValue(str(newValue))
+			else:
+				self.right.textQuantity.SetValue('0')
+		else:
+			self.right.textQuantity.SetValue('1')
 
-		self.choice = ['Daily Sales Report', 'Main Sales Report', 'Main Stock Report']
-		self.choiceBox = wx.Choice(self, 1, choices=self.choice, style=wx.CB_READONLY, size=(150, 35))
-		self.hbUp.Add(self.choiceBox, wx.EXPAND, border=5)
-		self.btnShow = wx.Button(self, 1, 'Show', size=(150, 35))
-		self.hbUp.Add(self.btnShow, wx.EXPAND, border=5)
-		st1= wx.StaticText(self,1,'')
-		self.hbUp.Add(st1, wx.EXPAND,border = 5)
-		st2= wx.StaticText(self,1,'')
-		self.hbUp.Add(st2, wx.EXPAND,border = 5)
+	def SubButton(self, event):
+		value = self.right.textQuantity.GetValue()
+		if value:
+			newValue = int(value)
+			if newValue > 0:
+				newValue -= 1
+				self.right.textQuantity.SetValue(str(newValue))
+			else:
+				self.right.textQuantity.SetValue('0')
+		else:
+			self.right.textQuantity.SetValue('1')
 
-		self.mainStock = wx.ListCtrl(self,-1,style=wx.LC_REPORT)
-		self.mainStock.InsertColumn(0, 'Name', width=200)
-		self.mainStock.InsertColumn(1, 'Quantity', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainStock.InsertColumn(2, 'Type', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainStock.InsertColumn(3, 'Cost@Drink', wx.LIST_FORMAT_RIGHT, 200)
-		self.mainStock.InsertColumn(4, 'Date', wx.LIST_FORMAT_RIGHT, 200)
-		box.Add(self.mainStock,flag=wx.EXPAND | wx.ALL,border=5)
+	def OnSeleOkButton(self, event):
+		index = self.left.list.GetFirstSelected()
+		try:
+			if int(self.right.textQuantity.GetValue()) != 0:
+				if index != -1:
+					self.quantOrdertot = int(self.right.textQuantity.GetValue())+self.quantOrdertot
+					self.sale = Sales(self.left.list.GetItemText(index),
+									  self.right.textQuantity.GetValue())
+					self.right.Data.append(
+						(self.sale.getName(), self.sale.getAmount(), self.sale.getTotalCost()))
+					self.costOrdertot = int(self.sale.getTotalCost())+self.costOrdertot
+					self.right.quantityStatus.DeleteItem(self.right.quantityStatus.GetItemCount()-1)
+					for i in self.right.Data:
+						index = self.right.quantityStatus.InsertStringItem(sys.maxint, i[0])
+						self.right.quantityStatus.SetStringItem(index, 1, i[1])
+						self.right.quantityStatus.SetStringItem(index, 2, i[2])
+					self.right.Data = []
+					index = self.right.quantityStatus.InsertStringItem(sys.maxint, "Total")
+					self.right.quantityStatus.SetStringItem(index, 1,str(self.quantOrdertot))
+					self.right.quantityStatus.SetStringItem(index, 2, str(self.costOrdertot))
+					self.right.valueData.append((self.sale.getName(), self.sale.getAmount(), self.sale.getTotalCost()))
+					self.right.textQuantity.SetValue('1')
+				else:
+					wx.MessageBox('Please select a drink', 'Error')
+			else:
+				wx.MessageBox('Enter Quantity Please')
 
-		for i in mainStockData:
-			index = self.mainStock.InsertStringItem(sys.maxint, i[0])
-		 	self.mainStock.SetStringItem(index, 1, i[1])
-			self.mainStock.SetStringItem(index, 2, i[2])
-		sizer.Add(self.hbUp,pos=(0,0),flag=wx.EXPAND | wx.ALL,border=5)
-		sizer.Add(box,pos=(2,0),flag=wx.EXPAND | wx.ALL,border=5)
-		self.SetSizer(sizer)
-		self.Fit()
-		self.Show(True)
+		except ValueError:
+			wx.MessageBox('Wrong Amount')
+	# Saving the order to the database (This is down ok button event method)
+	def onSaveSession(self, e):
+		if self.right.valueData:
+			if self.notInSession:
+				# we are here because we are trying to enter new orders
+				for row in self.right.valueData:
+					# inserting the new order to the orders table
+					sale.connect.cur().execute("INSERT INTO session(sNo, name, quantity, cost, date) VALUES ({sNo}, "
+											   "'{name}', {quantity}, {cost}, '{date}')"
+											   .format(sNo=self.session, name=row[0], quantity=row[1], cost=row[2],
+													   date=vdate))
+					# updating the dailySale table quantity and sales values
+					sale.connect.cur().execute("UPDATE dailySale SET quantity = (SELECT quantity FROM dailySale WHERE "
+											   "name = '{name}')+{quantity}, sales = (SELECT sales FROM dailySale  WHERE "
+											   "name = '{name}')+{cost}, date = '{date}' WHERE name = '{name}'"
+											   .format(name=row[0], quantity=row[1], cost=row[2], date=vdate))
+					# calculatin and changing the value of profit
+					sale.connect.cur().execute("UPDATE dailySale SET profit = (SELECT sales FROM dailySale WHERE name ='{name}')-"
+											   "(SELECT purCost FROM mainStock WHERE name = '{name}')*(SELECT quantity FROM dailySale "
+											   "WHERE name = '{name}') where name = '{name}'".format(name=row[0]))
+				sale.connect.commit()
+				self.quantOrdertot = 0
+				self.costOrdertot = 0
+				self.session = self.session + 1
+				self.right.sessionNo.SetLabel('Order No: ' + str(self.session))
+				self.right.quantityStatus.DeleteAllItems()
+				self.right.Data = []
+				self.right.valueData = []
+			else:
+				# we are here because we are changing the value(s) of a order
+				# remove the past records of the order
+				for i in self.pastSessionData:
+					# decreasing the daily sales
+					sale.connect.cur().execute("UPDATE dailySale SET quantity = (SELECT quantity  FROM dailySale WHERE "
+											 "name = '{name}') - {quantity} , sales =(SELECT sales  FROM dailySale WHERE "
+											 "name = '{name}')-{cost} WHERE name = '{name}'"
+											 .format(name=i[0], quantity=i[1], cost=i[2]))
+					# removing the records from the session/orders table
+				sale.connect.cur().execute('DELETE FROM session WHERE sNo={sno}'.format(sno=self.orderNo))
+				# placing back the good edited data
+				for row in self.right.valueData:
+					#inserting the edited data into the  database file
+					sale.connect.cur().execute("INSERT INTO session(sNo, name, quantity, cost, date) VALUES ({sNo}, "
+											   "'{name}', {quantity}, {cost}, '{date}')"
+											   .format(sNo=self.orderNo, name=row[0], quantity=row[1], cost=row[2],
+													   date=vdate))\
+					#updating the daily sales
+					sale.connect.cur().execute("UPDATE dailySale SET quantity = (SELECT quantity FROM dailySale WHERE "
+											   "name = '{name}')+{quantity}, sales = (SELECT sales FROM dailySale  WHERE "
+											   "name = '{name}')+{cost} WHERE name = '{name}'"
+											   .format(name=row[0], quantity=row[1], cost=row[2]))
+				sale.connect.commit()
+				self.right.sessionNo.SetLabel('Order No: ' + str(self.session))
+				self.right.quantityStatus.DeleteAllItems()
+				self.right.Data = []
+				self.right.valueData = []
+				self.notInSession = True
+		else:
+			wx.MessageBox('No orders entered', 'INFO')
 
-class Mywin(wx.Frame):
-	def __init__(self, parent, id,title):
-		super(Mywin, self).__init__(parent, id,title=title)
-		panel=wx.Panel(self)
-		self.hbDown = wx.BoxSizer()
+	def editSession(self, event):
+		try:
+			print
+			self.orderNo = int(self.right.sessionText.GetValue())
+			ipo = False
+			self.notInSession = False
+			sessionAva = [numbers for numbers in connection.cur().execute('SELECT DISTINCT(sNo) FROM session;')]
+			for row in sessionAva:
+				if (int(row[0]) == self.orderNo):
+					ipo = True
+					break
+			if ipo:
+				if self.right.quantityStatus.GetItemCount() == 0:
+					data = [row for row in
+							connection.cur().execute('SELECT  name,quantity,cost  FROM session WHERE sNo={sno}'
+													 .format(sno=self.orderNo))]
+					self.right.valueData = data
+					self.pastSessionData = data
+					self.quantOrdertot = 0
+					self.costOrdertot = 0
+					for i in data:
+						index = self.right.quantityStatus.InsertStringItem(sys.maxint, i[0])
+						self.costOrdertot = self.costOrdertot + int(i[2])
+						self.quantOrdertot = self.quantOrdertot + int(i[1])
+						self.right.quantityStatus.SetStringItem(index, 1, str(i[1]))
+						self.right.quantityStatus.SetStringItem(index, 2, str(i[2]))
+					self.right.sessionNo.SetLabel('Order No: ' + str(self.orderNo))
+					index = self.right.quantityStatus.InsertStringItem(sys.maxint, "Total")
+					self.right.quantityStatus.SetStringItem(index, 1, str(self.quantOrdertot))
+					self.right.quantityStatus.SetStringItem(index, 2, str(self.costOrdertot))
+					self.right.sessionText.SetValue('')
+				else:
+					wx.MessageBox("Please save the previous order first")
+			else:
+				wx.MessageBox("No such order number in our database")
+		except ValueError:
+			wx.MessageBox('Enter a correct order number')
 
-		self.dailySaleReport = dailySaleReport(panel,-1)
-		self.mainSaleReport = mainSaleReport(panel,-1)
-		self.mainStockReport = mainStockReport(panel,-1)
 
-		self.hbDown.Add(self.dailySaleReport,1, flag=wx.EXPAND | wx.ALL, border=5)
-		self.hbDown.Add(self.mainSaleReport, 1,flag=wx.EXPAND | wx.ALL, border=5)
-		self.hbDown.Add(self.mainStockReport,1, flag=wx.EXPAND | wx.ALL, border=5)
 
-		self.mainSaleReport.Hide()
-		self.mainStockReport.Hide()
-		self.dailySaleReport.btnShow.Bind(wx.EVT_BUTTON,self.OnClick)
-		self.mainSaleReport.btnShow.Bind(wx.EVT_BUTTON,self.OnClick1)
-		self.mainStockReport.btnShow.Bind(wx.EVT_BUTTON,self.OnClick2)
-		panel.SetSizer(self.hbDown)
-		self.Centre()
-		self.Show(True)
+	def onclear(self, e):
+		self.index = e.GetIndex()
 
-	def OnClick(self,evt):
-		if (self.dailySaleReport.choiceBox.GetString(self.dailySaleReport.choiceBox.GetSelection()) =='Main Sales Report'):
-			self.mainSaleReport.Show()
-			self.dailySaleReport.Hide()
-			self.Layout()
-
-		if (self.dailySaleReport.choiceBox.GetString(self.dailySaleReport.choiceBox.GetSelection()) =='Main Stock Report'):
-			self.mainStockReport.Show()
-			self.dailySaleReport.Hide()
-			#self.Layout()
-
-	def OnClick1(self,evt):
-		if (self.mainSaleReport.choiceBox.GetString(self.mainSaleReport.choiceBox.GetSelection()) =='Daily Sales Report'):
-			self.dailySaleReport.Show()
-			self.mainSaleReport.Hide()
-			self.Layout()
-
-		if(self.mainSaleReport.choiceBox.GetString(self.mainSaleReport.choiceBox.GetSelection()) =='Main Stock Report'):
-			self.mainStockReport.Show()
-			self.mainSaleReport.Hide()
-			self.Layout()
-
-	def OnClick2(self,evt):
-		if (self.mainStockReport.choiceBox.GetString(self.mainStockReport.choiceBox.GetSelection()) =='Daily Sales Report'):
-			self.dailySaleReport.Show()
-			self.mainStockReport.Hide()
-			self.Layout()
-
-		if (self.mainStockReport.choiceBox.GetString(self.mainStockReport.choiceBox.GetSelection()) =='Main Sales Report'):
-			self.mainSaleReport.Show()
-			self.mainStockReport.Hide()
-			self.Layout()
-
-ex = wx.App()
-Mywin(None,-1,'ListCtrl Demo')
-ex.MainLoop()
+	def OnSeleClear(self, event):
+		if self.index != -1:
+			if self.index != self.right.quantityStatus.GetItemCount()-1:
+				self.quantOrdertot = self.quantOrdertot - int(self.right.quantityStatus.GetItemText(self.index, col=1))
+				self.costOrdertot = self.costOrdertot - int(self.right.quantityStatus.GetItemText(self.index, col=2))
+				self.right.quantityStatus.DeleteItem(self.right.quantityStatus.GetItemCount() - 1)
+				index = self.right.quantityStatus.InsertStringItem(sys.maxint, "Total")
+				self.right.quantityStatus.SetStringItem(index, 1, str(self.quantOrdertot))
+				self.right.quantityStatus.SetStringItem(index, 2, str(self.costOrdertot))
+				self.right.quantityStatus.DeleteItem(self.index)
+				self.right.valueData.pop(self.index)
+				self.index = -1
+			else:
+				wx.MessageBox('You cannot delete the Total row', 'Info')
+		else:
+			wx.MessageBox('Please Select Row to Delete', 'Info')

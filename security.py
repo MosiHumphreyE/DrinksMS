@@ -2,7 +2,6 @@
 
 from databaseConn import DatabaseConn
 
-
 class Security:
 
     def __init__(self, name, password):
@@ -28,12 +27,14 @@ class Security:
         return self.state
 
 
+
 class AccountManager:
 
     def __init__(self, name, password):
         self.name = name
         self.password = password
         self.conn = DatabaseConn()
+
 
     def __init__(self):
         self.conn = DatabaseConn()
@@ -51,7 +52,7 @@ class AccountManager:
             return self.password
 
     def checkState(self,name):
-        data = DatabaseConn().cur().execute("SELECT state FROM security WHERE name = '%s'"%name)
+        data = self.conn.cur().execute("SELECT state FROM security WHERE name = '%s'"%name)
         if data.fetchall()[0][0] == "off":
             return True
         else:
@@ -92,3 +93,4 @@ class AccountManager:
         for row in self.conn.cur().execute("SELECT password FROM security WHERE name = '{name1}'".format(name1=name)):
             password.append(row)
         return password
+
